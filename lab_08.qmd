@@ -93,7 +93,7 @@ The visualiser should allow the user to:
 
 Once your app can filter the data:
 
-- [ ] Plot body mass against flipper length for Adelie penguins only, then for Gentoo penguins only. Compare the two plots: how could they mislead someone comparing the two species?
+- [x] Plot body mass against flipper length for Adelie penguins only, then for Gentoo penguins only. Compare the two plots: how could they mislead someone comparing the two species?
 - [ ] Change your app so that the axes stay the same whatever is filtered. (Hint: see how the data explorer in the Week 8 notes fixes its axes. Here, the limits need to depend on the variables chosen.)
 
 ::: {.solution}

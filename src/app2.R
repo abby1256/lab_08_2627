@@ -6,18 +6,22 @@ head(penguins)
 
 ui <- fluidPage(
   titlePanel("Penguins App"),
-  selectInput("x_axis", label = "Pick the x-axis" , 
+  selectInput("x_axis", label = "Pick the x-axis" , choices = 
      c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g")),
   
-  selectInput("y_axis", label = "Pick the y-axis" , 
+  selectInput("y_axis", label = "Pick the y-axis" , choices = 
      c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g")),
   
-  selectInput("colour", "Colour by" , c("None", "species", "island", "sex", "year")),
+  selectInput("colour", "Colour by" , choices = c("None", "species", "island", 
+                                                  "sex", "year")),
   
   sliderInput("transparency", label = "Select the transparency", min = 0, 
               max = 1, value = 1),
   
-  #selectInput("filter", "Filter by" , c("None", "species", "island", "sex", "year"))
+  selectInput("filter_variable", "Filter by" , choices = list("None", "species", 
+   "island", "sex", "year")),
+  
+  selectInput("filter_value", "Choose value", choices = NULL),
   
   plotOutput("plot")
 
@@ -25,20 +29,46 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
+  observeEvent(input$filter_variable,
+    {req(input$filter_variable)
+    switch(input$filter_variable,
+    species = updateSelectInput(session, "filter_value", "Select species",
+                        choices = c("Adelie", "Chinstrap", "Gentoo")),
+    island = updateSelectInput(session, "filter_value", "Select island",
+                        choices = c("Biscoe", "Dream", "Torgersen")),
+    sex = updateSelectInput(session, "filter_value", "Select sex",
+                        choices = c("female", "male")),
+    year = updateSelectInput(session, "filter_value", "Select year",
+                        choices = c(2007, 2008,2009))
+    )
+    })
   penguin_data <- reactive({req(input$x_axis)
     req(input$y_axis)
     req(input$colour)
-    if (input$colour == "None"){
-      tibble(
-        x_data = penguins[[input$x_axis]],
-        y_data = penguins[[input$y_axis]])
+    if (input$colour == "None" & input$filter_variable != "None"){
+      penguins |> filter(.data[[input$filter_variable]] == input$filter_value) |>
+       select(
+        x_data = all_of(input$x_axis),
+        y_data = all_of(input$y_axis))
+    } else if (input$colour != "None" & input$filter_variable != "None"){
+      penguins |> filter(.data[[input$filter_variable]] == input$filter_value) |>
+        select(
+         x_data = all_of(input$x_axis),
+         y_data = all_of(input$y_axis),
+         colour_by = all_of(input$colour))
+    } else if (input$colour == "None" & input$filter_variable == "None"){
+      penguins |>
+        select(
+          x_data = all_of(input$x_axis),
+          y_data = all_of(input$y_axis))
     } else {
-      tibble(
-        x_data = penguins[[input$x_axis]],
-        y_data = penguins[[input$y_axis]],
-        colour_by = penguins[[input$colour]]
-      )}
-    })
+      penguins |>
+        select(
+          x_data = all_of(input$x_axis),
+          y_data = all_of(input$y_axis),
+          colour_by = all_of(input$colour))
+    }
+  })
   
   output$plot <- renderPlot({
     
